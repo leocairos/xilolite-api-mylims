@@ -5,7 +5,7 @@ import { createConnection, getConnection, getRepository } from 'typeorm';
 import apiMYLIMS from '@shared/services/apiMYLIMS';
 import logger from '@config/logger';
 import Sample from '@modules/samples/infra/typeorm/entities/Sample';
-import SamplesControllerv2 from '@modules/samples/infra/controller/SamplesControllerv2';
+import SamplesController from '@modules/samples/infra/controller/SamplesController';
 
 import SampleMethod from '@modules/samples/infra/typeorm/entities/SampleMethod';
 import { remoteIp } from '@shared/services/util';
@@ -79,7 +79,6 @@ const getSampleToMail = async (idSample: number): Promise<ISampleDetail> => {
       observation: findSampleDetail[0].observation,
       analysis: sampleAnalysis,
       hashMail: findSampleDetail[0].hash_mail,
-      // lastUpdated_at: new Date(maxDateInSample),
     };
     return sampleDetail;
   } catch {
@@ -88,9 +87,7 @@ const getSampleToMail = async (idSample: number): Promise<ISampleDetail> => {
 };
 
 const updateHashMail = async (sampleDetail: ISampleDetail): Promise<void> => {
-  // const hashProvider = new BCryptHash();
 
-  // eslint-disable-next-line no-param-reassign
   delete sampleDetail?.hashMail;
   // eslint-disable-next-line no-param-reassign
   // delete sampleDetail.lastUpdated_at;
@@ -109,11 +106,6 @@ const updateHashMail = async (sampleDetail: ISampleDetail): Promise<void> => {
   });
 
   if (findSample) {
-    // findSample.hashMail = await hashProvider.generateHash(
-    //   JSON.stringify(sampleDetail),
-    // );
-
-    // findSample.hashMail = JSON.stringify(sampleDetail);
     findSample.hashMail = md5(JSON.stringify(sampleDetail));
 
     await ormRepository.save(findSample);
@@ -239,18 +231,13 @@ const mylimsNotification = async (
       idSample = EntityId;
     }
 
-    const samplesController = new SamplesControllerv2();
+    const samplesController = new SamplesController();
     await samplesController.updateSample(idSample);
     const sampleDetail = await getSampleToMail(idSample);
 
     Object.assign(sampleDetail, {
       notificationEvent: `Entity: ${Entity} | Event: ${Event}`,
     });
-
-    // eslint-disable-next-line no-param-reassign
-    // sampleDetail.lastUpdated_at = sampleDetail.lastUpdated_at
-    //   ? format(sampleDetail.lastUpdated_at as Date, 'dd/MM/yyyy HH:mm:ss')
-    //   : '';
 
     sendMail(sampleDetail);
 
@@ -357,7 +344,7 @@ const mylimsSyncSample = async (
 
   try {
     if (idSample) {
-      const samplesController = new SamplesControllerv2();
+      const samplesController = new SamplesController();
       await samplesController.updateSample(Number(idSample));
       const sampleDetail = await getSampleToMail(Number(idSample));
       sendMail(sampleDetail);

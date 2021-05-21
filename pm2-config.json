@@ -1,7 +1,7 @@
 {
   "apps" : [
     {
-      "name": "api-cq",
+      "name": "api-mylims",
       "script": "dist/shared/infra/http/server.js",
       "args":["api"],
       "max_memory_restart": "500M",

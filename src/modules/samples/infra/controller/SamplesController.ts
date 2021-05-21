@@ -3,9 +3,9 @@ import apiMYLIMS from '@shared/services/apiMYLIMS';
 import logger from '@config/logger';
 // import LastEditionSampleService from '@modules/samples/services/LastEditionSampleService';
 import { getRepository, createConnection } from 'typeorm';
-import sampleInfosv2 from './SampleInfosControllerv2';
-import sampleMethodsv2 from './SampleMethodsControllerv2';
-import sampleAnalysesv2 from './SampleAnalysesControllerv2';
+import sampleInfos from './SampleInfosController';
+import sampleMethods from './SampleMethodsController';
+import sampleAnalyses from './SampleAnalysesController';
 
 import { ISample } from '../../dtos/ISampleMYLIMSDTO';
 import Sample from '../typeorm/entities/Sample';
@@ -123,9 +123,9 @@ export default class Samples {
             `Sample: ${sample.id} last edition in ${sample.currentStatusEditionDateTime}`,
           );
 
-          const sampleInfoSaved = await sampleInfosv2(sample.id);
-          const sampleMethodSaved = await sampleMethodsv2(sample.id);
-          const sampleAnalysesSaved = await sampleAnalysesv2(sample.id);
+          const sampleInfoSaved = await sampleInfos(sample.id);
+          const sampleMethodSaved = await sampleMethods(sample.id);
+          const sampleAnalysesSaved = await sampleAnalyses(sample.id);
 
           return {
             infosCount: sampleInfoSaved,
@@ -281,9 +281,9 @@ export default class Samples {
               `Sample: ${sample.id} last edition in ${sample.currentStatusEditionDateTime}`,
             );
 
-            const sampleInfoSaved = await sampleInfosv2(sample.id);
-            const sampleMethodSaved = await sampleMethodsv2(sample.id);
-            const sampleAnalysesSaved = await sampleAnalysesv2(sample.id);
+            const sampleInfoSaved = await sampleInfos(sample.id);
+            const sampleMethodSaved = await sampleMethods(sample.id);
+            const sampleAnalysesSaved = await sampleAnalyses(sample.id);
 
             return {
               infosCount: sampleInfoSaved,

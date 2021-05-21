@@ -13,9 +13,6 @@ import logger from '@config/logger';
 import createConnection from '@shared/infra/typeorm';
 import express, { Request, Response, NextFunction } from 'express';
 
-import { appPort } from '@config/runMode';
-import uploadConfig from '@config/upload';
-
 import AppError from '@shared/errors/AppError';
 import rateLimiter from './middlewares/rateLimiter';
 import routes from './routes';
@@ -36,15 +33,13 @@ app.disable('x-powered-by');
 
 app.use(
   morgan(
-    ':method :url :remote-addr - :remote-user :status :res[content-length] B :response-time ms',
+    `:method :url :remote-addr - :remote-user :status :res[content-length] B :response-time ms`,
     { stream: logger.stream },
   ),
 );
 
 app.use(compression());
 app.use(rateLimiter);
-
-app.use('/files', express.static(uploadConfig.uploadsFolder));
 
 app.use(routes);
 
@@ -65,6 +60,6 @@ app.use((err: Error, request: Request, response: Response, _: NextFunction) => {
   });
 });
 
-app.listen(appPort(), () => {
+app.listen(Number(process.env.APP_PORT || 3530), () => {
   serverListen();
 });

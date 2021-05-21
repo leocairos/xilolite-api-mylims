@@ -1,17 +1,14 @@
 /* eslint-disable no-loop-func */
 /* eslint-disable no-await-in-loop */
 import { CronJob } from 'cron';
-// import { Request, Response } from 'express';
 
-import SamplesControllerv2 from '@modules/samples/infra/controller/SamplesControllerv2';
+import SamplesController from '@modules/samples/infra/controller/SamplesController';
 import apiMYLIMS from '@shared/services/apiMYLIMS';
-// import apiCQ from '@shared/services/apiCQ';
-import AuxiliariesControllerv2 from '@modules/samples/infra/controller/AuxiliariesControllerv2';
-import { runMode, appPort } from '@config/runMode';
+import AuxiliariesController from '@modules/samples/infra/controller/AuxiliariesController';
 import logger from '@config/logger';
 
 const importAllSamples = async (): Promise<void> => {
-  const samplesController = new SamplesControllerv2();
+  const samplesController = new SamplesController();
   await apiMYLIMS
     .get('/samples?$inlinecount=allpages&$top=5')
     .then(async samples => {
@@ -40,7 +37,7 @@ const importAllSamples = async (): Promise<void> => {
 };
 
 const importNews = async (): Promise<void> => {
-  const samplesController = new SamplesControllerv2();
+  const samplesController = new SamplesController();
   const lastDate = await samplesController.getLastEditionStored();
   lastDate.setHours(
     lastDate.getHours() - Number(process.env.HOUR_TO_RETROCED_IMPORT || 12),
@@ -142,12 +139,7 @@ export const reprocessTasksWithError = async (): Promise<IReprocessResult> => {
       .catch(error => {
         logger.error(`[Tasks Reprocess] Aborted with error: ${error} `);
       });
-    // await apiCQ.post('/mylims/notification', {
-    //   Entity: task.Entity,
-    //   EntityId: task.EntityId,
-    //   ReferenceKey: 'L001',
-    //   Event: task.Event,
-    // });
+
   }
 
   return { tasksToReprocess, tasksDetails };
@@ -184,18 +176,18 @@ const serverListen = (): void => {
   logger.info(
     `\n${'#'.repeat(100)}\n${' '.repeat(
       26,
-    )} Service now running on port '${appPort()}' (${
+    )} Service now running on port '${Number(process.env.APP_PORT || 3530)}' (${
       process.env.NODE_ENV
     }) ${' '.repeat(26)} \n${'#'.repeat(100)}\n`,
   );
 
-  switch (runMode()) {
-    case 'importAll':
+  switch (process.argv[2].toUpperCase()) {
+    case 'IMPORTALL':
       logger.info('Import All records');
 
       try {
         setTimeout(async () => {
-          await AuxiliariesControllerv2();
+          await AuxiliariesController();
           await importAllSamples();
           process.exit(0);
         }, 3000);
@@ -205,7 +197,7 @@ const serverListen = (): void => {
       }
       break;
 
-    case 'sync':
+    case 'SYNC':
       logger.info(
         `Every ${process.env.INTERVAL_TO_IMPORT} seconds importing updated records in the last ${process.env.HOUR_TO_RETROCED_IMPORT} hours`,
       );
@@ -222,7 +214,7 @@ const serverListen = (): void => {
               isRunning = true;
               setTimeout(async () => {
                 if (countUpdAux % 50 === 0) {
-                  await AuxiliariesControllerv2();
+                  await AuxiliariesController();
                   countUpdAux = 0;
                 }
                 countUpdAux += 1;
@@ -240,38 +232,11 @@ const serverListen = (): void => {
       }
       break;
 
-    case 'api':
+    case 'API':
       logger.info('API mode');
 
       runCheck();
       break;
-
-    // case 'reprocessTasks':
-    //   logger.info(
-    //     `Every ${process.env.INTERVAL_TO_IMPORT} seconds check tasks with error...`,
-    //   );
-
-    //   // eslint-disable-next-line no-case-declarations
-    //   let isRunningRep = false;
-    //   try {
-    //     const job = new CronJob(
-    //       `*/${process.env.INTERVAL_TO_IMPORT} * * * * *`,
-    //       () => {
-    //         if (!isRunningRep) {
-    //           isRunningRep = true;
-    //           setTimeout(async () => {
-    //             await reprocessTasksWithError();
-    //             isRunningRep = false;
-    //           }, 3000);
-    //         }
-    //       },
-    //     );
-    //     job.start();
-    //   } catch (err) {
-    //     logger.error(`Finished with error: ${err}`);
-    //     isRunningRep = false;
-    //   }
-    //   break;
 
     default:
       logger.warn('Sorry, that is not something I know how to do.');
@@ -279,4 +244,4 @@ const serverListen = (): void => {
   }
 };
 
-export { serverListen /* , serviceStatus, checkTasks */ };
+export { serverListen };

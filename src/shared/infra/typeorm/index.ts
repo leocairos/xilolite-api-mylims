@@ -8,7 +8,7 @@ export default async (name = 'default'): Promise<Connection> => {
       name,
       database:
         process.env.NODE_ENV === 'test'
-          ? 'api-cq-test'
+          ? 'api-cq-myLims-test'
           : defaultOptions.database,
     }),
   );
